@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from scipy import stats
-import pickle
 import sys, getopt
 
 def main(argv):
@@ -21,17 +20,16 @@ def main(argv):
 			sys.exit()
 		elif opt in ("-i", "--ifile"):
 			inputfile = arg
+			if inputfile == "":
+				print 'pca_pipeline.py -i <inputfile> -o <outputfile>'
+				sys.ecit()
 		elif opt in ("-o", "--ofile"):
 			outputfile_name = arg
-	#print 'Input file is "', inputfile
-	#print 'Output file is "', outputfile_name
 	return inputfile,outputfile_name
    
 if __name__ == "__main__":
 	inputfile, outputfile_name = main(sys.argv[1:])
 
-genomes_dir = "/data/genomes/"
-genome = inputfile
 
 
 window_up = 18
@@ -41,12 +39,6 @@ start_codons = ["ATG", "GTG", "TTG"]
 stop_codons = ["TAA", "TAG", "TGA"]
 relative_scores = True
 
-correlation_matrix_adjusted = open("final_output/correlation_matrix_adjusted_refset1.txt","a")
-correlation_matrix = open("final_output/correlation_matrix_refset1.txt","a")
-#correlation_matrix_adjusted = open("final_output/small_correlation_matrix_adjusted_refset.txt","a")
-#correlation_matrix = open("final_output/small_correlation_matrix_refset.txt","a")
-
-tax_dict = pickle.load(open("taxonomy_dic.txt"))
 
 def init_genome(file_location):
 	genome_seq,genome_gc = get_genome_seq(file_location)
@@ -185,21 +177,17 @@ def get_codon_search_seqs(genome_orfs,genome_seq,name,uid_code,genome_gc,mode):
 		for candidate_start_upstream in candidate_starts_upstream:
 			relative_position = int(candidate_start_upstream[0])
 			start_freqs_up[relative_position] += 1
-		#print candidate_starts_upstream
 		
 		#Get longest ORF (for upstream start determination
 		if len(candidate_starts_upstream)>0:
 			longest_orf = candidate_starts_upstream[-1][1]
-			#print gene,strand,name,longest_orf,candidate_starts_upstream[-1]
 		else:
 			longest_orf = start
 		# Don't include the first 30 nt
 		if strand == "+":
 			longest_orf_up_seq = genome_seq[longest_orf-codon_search_window:longest_orf]
-			#longest_orf_up_seq = genome_seq[longest_orf-codon_search_window:longest_orf-30]
 		if strand == "-":
 			longest_orf_up_seq = genome_seq[longest_orf:longest_orf+codon_search_window]
-			#longest_orf_up_seq = genome_seq[longest_orf+30:longest_orf+codon_search_window]
 			longest_orf_up_seq = reverse_sequence(longest_orf_up_seq)
 
 		orfs = find_candidate_starts_no_stop_check(longest_orf_up_seq,"backward",strand,start)
@@ -211,8 +199,6 @@ def get_codon_search_seqs(genome_orfs,genome_seq,name,uid_code,genome_gc,mode):
 		for candidate_start_downstream in candidate_starts_downstream:
 			relative_position = int(candidate_start_downstream[0])
 			start_freqs_down[relative_position] += 1
-	#print start_freqs_up
-	#print start_freqs_down
 	
 	combined_dict = start_freqs_up
 	for key in start_freqs_down.keys():
@@ -244,39 +230,28 @@ def find_candidate_starts(sequence,direction,strand,start):
 	codon = None
 	if direction == "backward":
 		for i in range(len(sequence)-3,0,-3):
-			#print sequence[i:i+3], i-len(sequence)
 			if sequence[i:i+3] in start_codons:
 				codon = sequence[i:i+3]
 				relative_position = i-len(sequence)
 				absolute_position = relative_position+start
 				if strand == "-":
 					absolute_position = start-relative_position
-				#print absolute_position
-				#print "Identified start: ", sequence[i:i+3], "position: ", i
 				alternative_starts.append([relative_position,absolute_position,codon])
-				#break
 			if sequence[i:i+3] in stop_codons:
 				break
 	if direction == "forward":
 		for i in range(0,len(sequence),3):
-			#print sequence[i:i+3], i
 			if sequence[i:i+3] in start_codons:
 				codon = sequence[i:i+3]
 				relative_position = i
 				absolute_position = relative_position+start+3
-				#if strand == "+":
-				#	relative_position += 3
 				relative_position += 3
 				if strand == "-":
 					absolute_position = start-relative_position
-				#print absolute_position
-				#print "Identified start:", sequence[i:i+3], "position: ", i
 				alternative_starts.append([relative_position,absolute_position,codon])
-				#break
 			if sequence[i:i+3] in stop_codons:
 				break
 	return alternative_starts
-	#return relative_position,codon
 
 def find_candidate_starts_no_stop_check(sequence,direction,strand,start):
 	relative_position = None
@@ -284,22 +259,15 @@ def find_candidate_starts_no_stop_check(sequence,direction,strand,start):
 	codon = None
 	if direction == "backward":
 		for i in range(len(sequence)-3,0,-3):
-			#print sequence[i:i+3], i-len(sequence)
 			if sequence[i:i+3] in start_codons:
 				codon = sequence[i:i+3]
 				relative_position = i-len(sequence)
 				absolute_position = relative_position+start
 				if strand == "-":
 					absolute_position = start-relative_position
-				#print absolute_position
-				#print "Identified start: ", sequence[i:i+3], "position: ", i
 				alternative_starts.append([relative_position,absolute_position,codon])
-				#break
-			#if sequence[i:i+3] in stop_codons:
-			#	break
 	if direction == "forward":
 		for i in range(0,len(sequence),3):
-			#print sequence[i:i+3], i
 			if sequence[i:i+3] in start_codons:
 				codon = sequence[i:i+3]
 				relative_position = i
@@ -308,14 +276,8 @@ def find_candidate_starts_no_stop_check(sequence,direction,strand,start):
 					relative_position += 3
 				if strand == "-":
 					absolute_position = start-relative_position-3
-				#print absolute_position
-				#print "Identified start:", sequence[i:i+3], "position: ", i
 				alternative_starts.append([relative_position,absolute_position,codon])
-				#break
-			#if sequence[i:i+3] in stop_codons:
-			#	break
 	return alternative_starts
-	#return relative_position,codon
 
 
 def plot_data(combined_dict,name,number_of_orfs,uid_code,coding_alt_start_freq,upstream_alt_start_freq,genome_gc,mode):
@@ -362,23 +324,10 @@ def plot_data(combined_dict,name,number_of_orfs,uid_code,coding_alt_start_freq,u
 		try:
 			correlation = stats.spearmanr(values,function_values)
 			correlation_up = stats.spearmanr(values[0:65],function_values[0:65])
-			#correlation_up = stats.spearmanr(values[0:59],function_values[0:59])
 			if mode == "adjusted":
 				correlation_matrix_adjusted.write(name+"\t"+str(genome_gc)+"\t"+uid_code+"\t"+tax_string+"\t"+str(number_of_orfs)+"\t"+str(round(correlation[0],2))+"\t"+str(round(correlation_up[0],2))+"\t"+str(sum_of_square_dif_up)+"\n")
 			else:
 				correlation_matrix.write(name+"\t"+str(genome_gc)+"\t"+uid_code+"\t"+tax_string+"\t"+str(number_of_orfs)+"\t"+str(round(correlation[0],2))+"\t"+str(round(correlation_up[0],2))+"\t"+str(sum_of_square_dif_up)+"\n")
-			
-			#uncomment to change low scoring file names
-			#if correlation_up[0]<0.9:
-			#	prefix = "low_"
-
-			#corr_string = "Correlation complete & up: "+str(round(correlation[0],2))+" & "+str(round(correlation_up[0],2))
-			#ax.text(3, 200, corr_string, fontsize=16)
-
-			#title including correlation
-			#ax.set_title(name+" ("+str(round(correlation_up[0],2))+")")
-
-			#title excluding correlation
 			ax.set_title(name)
 		except:
 			pass
@@ -396,5 +345,7 @@ def plot_data(combined_dict,name,number_of_orfs,uid_code,coding_alt_start_freq,u
 	else:
 		print "plot for", name,"failed..."
 	return None
-	
-init_genome(genome)
+
+if __name__ == "__main__":
+        inputfile, outputfile_name = main(sys.argv[1:])	
+	init_genome(genome)
