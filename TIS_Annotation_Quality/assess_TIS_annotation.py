@@ -299,7 +299,7 @@ def plot_data(combined_dict,name,number_of_orfs,coding_alt_start_freq,upstream_a
 		print "Quality correlation:\t",round(correlation_up[0],3)
 		if not os.path.exists(out_dir):
                 	os.makedirs(out_dir)
-		output_file = open(output_name+"_correlation.txt","w")
+		output_file = open(out_dir+output_name+"_correlation.txt","w")
                 output_file.write("Name\tGC-percentage\t#ORFs\tCorrelation Complete\tCorrelation Upstream\n")
 		output_file.write(name+"\t"+str(round(genome_gc,2))+"\t"+str(number_of_orfs)+"\t"+str(round(correlation[0],2))+"\t"+str(round(correlation_up[0],2))+"\n")
 		output_file.close()
@@ -311,7 +311,7 @@ def plot_data(combined_dict,name,number_of_orfs,coding_alt_start_freq,upstream_a
 			label.set_fontsize(6)
 		if not os.path.exists(out_dir):
 			os.makedirs(out_dir)
-		fig.savefig(out_dir+name+'.png')
+		fig.savefig(out_dir+name+'_distribution.png')
 		plt.clf()
 		print "TIS distribution plot generated..."
 	except:
