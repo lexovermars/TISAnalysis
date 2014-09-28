@@ -10,7 +10,7 @@ def main(argv):
 	inputfile = ''
 	output_name = ''
 	try:
-		opts, args = getopt.getopt(argv,"hi:o:f:",["ifile=","ofile=","ffile="])
+		opts, args = getopt.getopt(argv,"hi:o:f:",["input_file=","out_name=","fasta_file="])
 	except getopt.GetoptError:
 		print 'usage: assess_TIS_annotation.py -i <inputpttfile> -f <fastafile> -o <outputfile>'
 		sys.exit(2)
@@ -18,14 +18,14 @@ def main(argv):
 		if opt == '-h':
 			print 'usage: assess_TIS_annotation.py -i <inputfile> -f <fastafile> -o <outputfile>'
 			sys.exit()
-		elif opt in ("-i", "--ifile"):
+		elif opt in ("-i", "--input_file"):
 			inputfile = arg
-		elif opt in ("-o", "--ofile"):
-			outputfile_name = arg
-                elif opt in ("-f", "--ffile"):
+		elif opt in ("-o", "--out_name"):
+			output_name = arg
+                elif opt in ("-f", "--fasta_file"):
                         fasta_file = arg
 	if len(inputfile) == 0 or len(output_name) == 0:
-		print 'usage: assess_TIS_annotation.py -i <inputfile> -f <fastafile> -o <outputfile>'
+		print 'usage: assess_TIS_annotation.py -i <inputfile> -f <fastafile> -o <out_name>'
 		sys.exit()
 	return inputfile,fasta_file,output_name
 
@@ -33,6 +33,7 @@ def main(argv):
    
 
 ## Analysis parameters ##
+out_dir = "output/"
 window_up = 18
 window_down = 18
 codon_search_window = 198
@@ -63,6 +64,8 @@ def get_genome_seq(genome):
 	genome_seq = genome_seq.upper()
 	genome_length = float(len(genome_seq))
 	gc = (genome_seq.count("G")+genome_seq.count("C"))/genome_length
+	print "Genome sequence done.."
+	print "GC%:\t",round(gc,3)
 	return genome_seq,gc
 	
 def reverse_sequence(sequence):
@@ -103,7 +106,7 @@ def read_adjusted_annotation(outputfile_name,genome_orfs):
 		
 	
 	
-def get_codon_search_seqs(genome_orfs,genome_seq,name,uid_code,genome_gc,mode):
+def get_codon_search_seqs(genome_orfs,genome_seq,name,genome_gc):
 	candidate_starts_per_orf = {}
 	initial_pca_keys = []
 	candidate_start_codons = []
@@ -112,7 +115,7 @@ def get_codon_search_seqs(genome_orfs,genome_seq,name,uid_code,genome_gc,mode):
 	start_freqs_down = {}
 	count = 0
 	
-	#coding start chance
+	#coding start probality
 	coding_starts = 0
 	coding_triplets = 0
 	upstream_longest_orf_starts = 0
@@ -189,8 +192,6 @@ def get_codon_search_seqs(genome_orfs,genome_seq,name,uid_code,genome_gc,mode):
 
 	coding_alt_start_freq = coding_starts/float(coding_triplets)
 	upstream_alt_start_freq = upstream_longest_orf_starts/float(upstream_longest_orf_triplets)
-	print upstream_alt_start_freq
-	print coding_alt_start_freq,upstream_alt_start_freq,genome_gc,mode
 	plot_data(combined_dict,name,len(genome_orfs.keys()),coding_alt_start_freq,upstream_alt_start_freq,genome_gc)
 
 	return candidate_starts_per_orf, initial_pca_keys
@@ -291,20 +292,28 @@ def plot_data(combined_dict,name,number_of_orfs,coding_alt_start_freq,upstream_a
 	name = name.replace("/","")
 	ax.plot(function_values,color="r",linewidth=2)
 	plt.ylim([0,500])
-	sum_of_square_dif_up = np.sum((np.asarray(values[0:65])-np.asarray(function_values[0:65]))**2)
-	prefix = ""
+	ax.set_title(name)
 	try:
 		correlation = stats.spearmanr(values,function_values)
 		correlation_up = stats.spearmanr(values[0:65],function_values[0:65])
-		correlation_matrix.write(name+"\t"+str(genome_gc)+"\t"+str(number_of_orfs)+"\t"+str(round(correlation[0],2))+"\t"+str(round(correlation_up[0],2))+"\t"+str(sum_of_square_dif_up)+"\n")
-		ax.set_title(name)
+		print "Correlation:\t",round(correlation_up[0],3)
+		if not os.path.exists(out_dir):
+                	os.makedirs(out_dir)
+		output_file = open(output_name+"_correlation.txt","w")
+                output_file.write("Name\tGC-percentage\t#ORFs\tCorrelation Complete\tCorrelation Upstream\n")
+		output_file.write(name+"\t"+str(genome_gc)+"\t"+str(number_of_orfs)+"\t"+str(round(correlation[0],2))+"\t"+str(round(correlation_up[0],2))+"\n")
+		output_file.close()
+		print "TIS correlation file generated.."
 	except:
 		pass
 	try:
 		for label in ax.get_xticklabels():
 			label.set_fontsize(6)
-		fig.savefig('output/'+prefix+name+'.png')
+		if not os.path.exists(out_dir):
+			os.makedirs(out_dir)
+		fig.savefig(out_dir+name+'.png')
 		plt.clf()
+		print "TIS distribution plot generated..."
 	except:
 		print "plot for", name,"save failed..."
 		plt.clf()
@@ -312,4 +321,4 @@ def plot_data(combined_dict,name,number_of_orfs,coding_alt_start_freq,upstream_a
 
 if __name__ == "__main__":
         input_file,fasta_file,output_name = main(sys.argv[1:])	
-	init_genome(inputfile,fasta_file,output_name)
+	init_genome(input_file,fasta_file,output_name)
