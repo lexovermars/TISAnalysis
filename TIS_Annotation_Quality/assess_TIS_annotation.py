@@ -8,24 +8,28 @@ import sys, getopt
 
 def main(argv):
 	inputfile = ''
-	outputfile_name = ''
+	output_name = ''
 	try:
-		opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
+		opts, args = getopt.getopt(argv,"hi:o:f:",["ifile=","ofile=","ffile="])
 	except getopt.GetoptError:
-		print 'assess_TIS_annotation.py -i <inputpttfile> -o <outputfile>'
+		print 'usage: assess_TIS_annotation.py -i <inputpttfile> -f <fastafile> -o <outputfile>'
 		sys.exit(2)
 	for opt, arg in opts:
 		if opt == '-h':
-			print 'assess_TIS_annotation.py -i <inputfile> -o <outputfile>'
+			print 'usage: assess_TIS_annotation.py -i <inputfile> -f <fastafile> -o <outputfile>'
 			sys.exit()
 		elif opt in ("-i", "--ifile"):
 			inputfile = arg
-			if inputfile == "":
-				print 'assess_TIS_annotation.py -i <inputfile> -o <outputfile>'
-				sys.exit(2)
 		elif opt in ("-o", "--ofile"):
 			outputfile_name = arg
-	return inputfile,outputfile_name
+                elif opt in ("-f", "--ffile"):
+                        fasta_file = arg
+	if len(inputfile) == 0 or len(output_name) == 0:
+		print 'usage: assess_TIS_annotation.py -i <inputfile> -f <fastafile> -o <outputfile>'
+		sys.exit()
+	return inputfile,fasta_file,output_name
+
+
    
 
 ## Analysis parameters ##
@@ -35,17 +39,16 @@ codon_search_window = 198
 start_codons = ["ATG", "GTG", "TTG"]
 stop_codons = ["TAA", "TAG", "TGA"]
 relative_scores = True
+min_number_of_orfs = 500
 
 
-def init_genome(file_location):
-	genome_seq,genome_gc = get_genome_seq(file_location)
-	genome_orfs,name = read_ptt(file_location)
-	if len(genome_orfs) < 500:
+def init_genome(input_file,fasta_file,outname):
+	genome_seq,genome_gc = get_genome_seq(input_file)
+	genome_orfs,name = read_ptt(input_file)
+	if len(genome_orfs) < min_number_of_orfs:
+		print "Number of ORFs below threshold, exiting"
 		sys.exit()
-	adjusted_genome_orfs = []
-	name = name.strip()
-	print name
-	candidate_starts_per_orf, initial_pca_keys = get_codon_search_seqs(genome_orfs,genome_seq,name,uid_code,genome_gc,mode="annotation")
+	candidate_starts_per_orf, initial_pca_keys = get_codon_search_seqs(genome_orfs,genome_seq,name,genome_gc)
 	return None
         
 def get_genome_seq(genome):
@@ -188,7 +191,7 @@ def get_codon_search_seqs(genome_orfs,genome_seq,name,uid_code,genome_gc,mode):
 	upstream_alt_start_freq = upstream_longest_orf_starts/float(upstream_longest_orf_triplets)
 	print upstream_alt_start_freq
 	print coding_alt_start_freq,upstream_alt_start_freq,genome_gc,mode
-	plot_data(combined_dict,name,len(genome_orfs.keys()),uid_code,coding_alt_start_freq,upstream_alt_start_freq,genome_gc,mode)
+	plot_data(combined_dict,name,len(genome_orfs.keys()),coding_alt_start_freq,upstream_alt_start_freq,genome_gc)
 
 	return candidate_starts_per_orf, initial_pca_keys
 	
@@ -260,63 +263,53 @@ def find_candidate_starts_no_stop_check(sequence,direction,strand,start):
 	return alternative_starts
 
 
-def plot_data(combined_dict,name,number_of_orfs,uid_code,coding_alt_start_freq,upstream_alt_start_freq,genome_gc,mode):
-	if 1:
-		N = len(combined_dict.keys())
-		values = []
-		function_values = []
-		keys = sorted(combined_dict.keys())
-		for label in keys:
-			values.append(combined_dict[label])
-			if label<0:
-				#with coding start freqs
-				#function_values.append(number_of_orfs*(coding_alt_start_freq)*(1-1/float(32))**(abs(label)/3))
-				function_values.append(number_of_orfs*(upstream_alt_start_freq)*(1-3/float(64))**(abs(label)/3))
-				
-			else:
+def plot_data(combined_dict,name,number_of_orfs,coding_alt_start_freq,upstream_alt_start_freq,genome_gc):
+	N = len(combined_dict.keys())
+	values = []
+	function_values = []
+	keys = sorted(combined_dict.keys())
+	for label in keys:
+		values.append(combined_dict[label])
+		if label<0:
+			#with coding start freqs
+			#function_values.append(number_of_orfs*(coding_alt_start_freq)*(1-1/float(32))**(abs(label)/3))
+			function_values.append(number_of_orfs*(upstream_alt_start_freq)*(1-3/float(64))**(abs(label)/3))
+		else:
 				#function_values.append(number_of_orfs*(3/64.0))
-				function_values.append(number_of_orfs*(coding_alt_start_freq))
-		ind = np.arange(N)  # the x locations for the groups
-		width = 1       # the width of the bars
-		fig = plt.figure()
-		fig.set_size_inches(18.5,10.5)
-		ax = fig.add_subplot(111)
-		ax.bar(ind, values, width, color='CornflowerBlue',edgecolor = "black") #RoyalBlue?
-		ax.set_xticks(ind)
-		ax.set_xticklabels(keys,rotation='vertical')
+			function_values.append(number_of_orfs*(coding_alt_start_freq))
+	ind = np.arange(N)  # the x locations for the groups
+	width = 1       # the width of the bars
+	fig = plt.figure()
+	fig.set_size_inches(18.5,10.5)
+	ax = fig.add_subplot(111)
+	ax.bar(ind, values, width, color='CornflowerBlue',edgecolor = "black") #RoyalBlue?
+	ax.set_xticks(ind)
+	ax.set_xticklabels(keys,rotation='vertical')
 
-		fig.set_size_inches(18.5,10.5)
-		name = name.replace("\\","")
-		name = name.replace("/","")
-		ax.plot(function_values,color="r",linewidth=2)
-		plt.ylim([0,500])
-		sum_of_square_dif_up = np.sum((np.asarray(values[0:65])-np.asarray(function_values[0:65]))**2)
-		prefix = ""
-		try:
-			correlation = stats.spearmanr(values,function_values)
-			correlation_up = stats.spearmanr(values[0:65],function_values[0:65])
-			if mode == "adjusted":
-				correlation_matrix_adjusted.write(name+"\t"+str(genome_gc)+"\t"+uid_code+"\t"+tax_string+"\t"+str(number_of_orfs)+"\t"+str(round(correlation[0],2))+"\t"+str(round(correlation_up[0],2))+"\t"+str(sum_of_square_dif_up)+"\n")
-			else:
-				correlation_matrix.write(name+"\t"+str(genome_gc)+"\t"+uid_code+"\t"+tax_string+"\t"+str(number_of_orfs)+"\t"+str(round(correlation[0],2))+"\t"+str(round(correlation_up[0],2))+"\t"+str(sum_of_square_dif_up)+"\n")
-			ax.set_title(name)
-		except:
-			pass
-		try:
-			for label in ax.get_xticklabels():
-				label.set_fontsize(6)
-			if mode == "adjusted":
-				fig.savefig('start_freqs_200nt_trendline/'+prefix+name+'_adjusted'+'.png')
-			else:
-				fig.savefig('start_freqs_200nt_trendline/'+prefix+name+'.png')
-			plt.clf()
-		except:
-			print "plot for", name,"save failed..."
-			plt.clf()
-	else:
-		print "plot for", name,"failed..."
+	fig.set_size_inches(18.5,10.5)
+	name = name.replace("\\","")
+	name = name.replace("/","")
+	ax.plot(function_values,color="r",linewidth=2)
+	plt.ylim([0,500])
+	sum_of_square_dif_up = np.sum((np.asarray(values[0:65])-np.asarray(function_values[0:65]))**2)
+	prefix = ""
+	try:
+		correlation = stats.spearmanr(values,function_values)
+		correlation_up = stats.spearmanr(values[0:65],function_values[0:65])
+		correlation_matrix.write(name+"\t"+str(genome_gc)+"\t"+str(number_of_orfs)+"\t"+str(round(correlation[0],2))+"\t"+str(round(correlation_up[0],2))+"\t"+str(sum_of_square_dif_up)+"\n")
+		ax.set_title(name)
+	except:
+		pass
+	try:
+		for label in ax.get_xticklabels():
+			label.set_fontsize(6)
+		fig.savefig('output/'+prefix+name+'.png')
+		plt.clf()
+	except:
+		print "plot for", name,"save failed..."
+		plt.clf()
 	return None
 
 if __name__ == "__main__":
-        inputfile, outputfile_name = main(sys.argv[1:])	
-	init_genome(inputfile)
+        input_file,fasta_file,output_name = main(sys.argv[1:])	
+	init_genome(inputfile,fasta_file,output_name)
