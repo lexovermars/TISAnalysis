@@ -44,7 +44,7 @@ min_number_of_orfs = 500
 
 
 def init_genome(input_file,fasta_file,outname):
-	genome_seq,genome_gc = get_genome_seq(input_file)
+	genome_seq,genome_gc = get_genome_seq(fasta_file)
 	genome_orfs,name = read_ptt(input_file)
 	if len(genome_orfs) < min_number_of_orfs:
 		print "Number of ORFs below threshold, exiting"
@@ -52,10 +52,9 @@ def init_genome(input_file,fasta_file,outname):
 	candidate_starts_per_orf, initial_pca_keys = get_codon_search_seqs(genome_orfs,genome_seq,name,genome_gc)
 	return None
         
-def get_genome_seq(genome):
+def get_genome_seq(fasta_file):
 	genome_seq = ""
-	fna_file = genome.strip(".ptt")+".fna"
-	fna = open(fna_file,"r")
+	fna = open(fasta_file,"r")
 	for line in fna:
 		line = line.strip()
 		if line[0] != ">":
@@ -64,7 +63,7 @@ def get_genome_seq(genome):
 	genome_seq = genome_seq.upper()
 	genome_length = float(len(genome_seq))
 	gc = (genome_seq.count("G")+genome_seq.count("C"))/genome_length
-	print "Genome sequence done.."
+	print "Loading genome sequence done.."
 	print "GC%:\t",round(gc,3)
 	return genome_seq,gc
 	
@@ -90,6 +89,7 @@ def read_ptt(genome):
 		strand = line[1]
 		locus_tag = line[5]
 		genome_orfs[locus_tag] = [int(loc[0]),int(loc[1]),strand]
+	print "Loading ORF annotation done..."
 	return genome_orfs,name
 	
 def read_adjusted_annotation(outputfile_name,genome_orfs):
@@ -296,12 +296,12 @@ def plot_data(combined_dict,name,number_of_orfs,coding_alt_start_freq,upstream_a
 	try:
 		correlation = stats.spearmanr(values,function_values)
 		correlation_up = stats.spearmanr(values[0:65],function_values[0:65])
-		print "Correlation:\t",round(correlation_up[0],3)
+		print "Quality correlation:\t",round(correlation_up[0],3)
 		if not os.path.exists(out_dir):
                 	os.makedirs(out_dir)
 		output_file = open(output_name+"_correlation.txt","w")
                 output_file.write("Name\tGC-percentage\t#ORFs\tCorrelation Complete\tCorrelation Upstream\n")
-		output_file.write(name+"\t"+str(genome_gc)+"\t"+str(number_of_orfs)+"\t"+str(round(correlation[0],2))+"\t"+str(round(correlation_up[0],2))+"\n")
+		output_file.write(name+"\t"+str(round(genome_gc,2))+"\t"+str(number_of_orfs)+"\t"+str(round(correlation[0],2))+"\t"+str(round(correlation_up[0],2))+"\n")
 		output_file.close()
 		print "TIS correlation file generated.."
 	except:
