@@ -17,7 +17,8 @@ Usage
 
 TIS Annotation Quality
 --------------
-  python assess_annotation.py -i Example_data/NC_000913.ptt -f Example_data/NC_000913.fna -o "MyOutputName"
+
+	python assess_annotation.py -i Example_data/NC_000913.ptt -f Example_data/NC_000913.fna -o "MyOutputName"
 
 TIS Annotator
 --------------
