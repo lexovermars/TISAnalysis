@@ -26,6 +26,10 @@ def main(argv):
         if len(inputfile) == 0 or len(output_name) == 0:
                 print 'usage: assess_TIS_annotation.py -i <inputfile> -f <fastafile> -o <out_name>'
                 sys.exit()
+	if not os.path.exists(output_dir):
+        	os.makedirs(output_dir)
+        if not os.path.exists(r_out_dir):
+                os.makedirs(r_out_dir)
         return inputfile,fasta_file,output_name
 
 
@@ -33,7 +37,6 @@ def main(argv):
 window_up = 18
 window_down = 18
 codon_search_window = 198
-output_file_name = outputfile_name
 output_dir = "output/"
 first_round_postfix = "_3_max_length.txt"
 all_round_postfix = "_all_starts.txt"
@@ -92,9 +95,8 @@ def make_ptt_dict(ptt_file):
 	return ptt_dict
 	
 
-def get_genome_seq(genome):
+def get_genome_seq(fna_file):
 	genome_seq = ""
-	fna_file = genome.strip(".ptt")+".fna"
 	fna = open(fna_file,"r")
 	for line in fna:
 		line = line.strip()
@@ -291,8 +293,9 @@ def score_nucleotide(sequence,nucleotide):
 	
 	
 def PCA_analysis_R(file_name):
-	Rcommand = "Rscript R_scripts/pca_scores_and_loadings_include_start.R "+str(file_name)
-	bla = os.system(Rcommand)
+	Rcommand = "Rscript --no-save --no-restore --verbose R_scripts/pca_scores_and_loadings.R "+str(file_name)+ "> output.Rout 2>&1"
+	#print Rcommand
+	command_out = os.system(Rcommand)
 	
 	
 def analyze_subset_PCA(file_name,round_count=1):
@@ -349,8 +352,8 @@ def analyze_subset_PCA(file_name,round_count=1):
 			else:
 				not_top_scoring_initial_dict[gene] += 1
 
-	# PC1 scores annotated \t PC1 scores non-annotated \t # genes \t # Annotated in PCA \t # Annotated top scores \t Annotation top 3 scores"
-	print "new pca\t",mean_annotated,"\t",mean_non_annotated,"\t",len(pca_score_dict.keys()),"\t",annotated_included_count,"\t",correct_count,"\tNA"
+	# PC1 scores annotated \t PC1 scores non-annotated \t # genes \t # Annotated in PCA \t # Annotated top scores
+	print "new pca\t",mean_annotated,"\t",mean_non_annotated,"\t",len(pca_score_dict.keys()),"\t",annotated_included_count,"\t",correct_count
 
 	#Parse the PCA loadings and load them in a dict
 	parse_pca_loadings(pca_position_annotated)
@@ -359,8 +362,8 @@ def analyze_subset_PCA(file_name,round_count=1):
 	
 	
 def analyze_projected_PCA(file_name,pca_position_annotated,round_count=1,mean_annotated_score=None):
-	print "Analyzing projected scores"
-	print "pca_position_annotated:", pca_position_annotated
+	print "Analyzing projected scores.."
+	#print "pca_position_annotated:", pca_position_annotated
 	pca_score_dict = {}
 	subset_keys = []
 	#Number of ORFs for which the annotated start is in the top 3 max. scores.
@@ -406,7 +409,7 @@ def analyze_projected_PCA(file_name,pca_position_annotated,round_count=1,mean_an
 	return subset_keys,annotated_best_score
 	
 def parse_pca_loadings(pca_position_annotated="plus"):
-	pca_loadings_file = open(r_out_dir+output_file_name+r_pca_loadings_postfix,"r")
+	pca_loadings_file = open(r_out_dir+output_name+r_pca_loadings_postfix,"r")
 	pca_data = pca_loadings_file.readlines()
 	pca_loadings_file.close()
 	for data in pca_data[1:len(pca_data)]:
@@ -435,15 +438,16 @@ if __name__ == "__main__":
 	candidate_starts_per_orf, initial_pca_keys = get_codon_search_seqs(genome_orfs)
 
 	#Make initial subset binary vector file
-	make_vectors(candidate_starts_per_orf,initial_pca_keys,output_dir+output_file_name+first_round_postfix)
+	make_vectors(candidate_starts_per_orf,initial_pca_keys,output_dir+output_name+first_round_postfix)
 	#Make complete binary vector file (all potential starts)
-	make_vectors(candidate_starts_per_orf,None,output_dir+output_file_name+all_round_postfix)
+	make_vectors(candidate_starts_per_orf,None,output_dir+output_name+all_round_postfix)
 
 	#Do initial PCA analysis (R script performs PCA on subset and projected PCA on complete set
 	prev_annotated_best_score = 0
-	PCA_analysis_R(output_file_name)
-	pca_position_annotated,mean_annotated = analyze_subset_PCA(output_file_name,0)
-	subset_keys,annotated_best_score = analyze_projected_PCA(output_file_name,pca_position_annotated,0,mean_annotated)
+	print "Initial PCA"
+	PCA_analysis_R(output_name)
+	pca_position_annotated,mean_annotated = analyze_subset_PCA(output_name,0)
+	subset_keys,annotated_best_score = analyze_projected_PCA(output_name,pca_position_annotated,0,mean_annotated)
 
 	#Do iterative PCA on subsets
 	round_count = 0
@@ -451,25 +455,29 @@ if __name__ == "__main__":
 	while 1:
 		prev_annotated_best_score = annotated_best_score
 		round_count += 1
-		print "Round\t",round_count
+		print "\nPCA Iteration ",round_count
 		#Create new subset file
-		make_vectors(candidate_starts_per_orf,subset_keys,output_dir+output_file_name+first_round_postfix)
-		PCA_analysis_R(output_file_name)
-		pca_position_annotated,mean_annotated = analyze_subset_PCA(output_file_name,round_count)
-		subset_keys,annotated_best_score = analyze_projected_PCA(output_file_name,pca_position_annotated,round_count,mean_annotated)
+		make_vectors(candidate_starts_per_orf,subset_keys,output_dir+output_name+first_round_postfix)
+		PCA_analysis_R(output_name)
+		pca_position_annotated,mean_annotated = analyze_subset_PCA(output_name,round_count)
+		subset_keys,annotated_best_score = analyze_projected_PCA(output_name,pca_position_annotated,round_count,mean_annotated)
 		if round_count > 8:
 			break
-		
-	
 
+	#Delete temporary files
+	try:
+		os.remove(output_dir+output_name+first_round_postfix)
+		os.remove(output_dir+output_name+all_round_postfix)
+	except:
+		pass
 
 	#Write sorted scores to a dic dump
-	dic_file = open(output_dir+outputfile_name+sorted_results_pickle_dump,"w")
+	dic_file = open(output_dir+output_name+sorted_results_pickle_dump,"w")
 	pickle.dump(sorted_pca_score_dict,dic_file)
 	dic_file.close()
 
 	#Write pca loadings to a dic dump
-	dic_file = open(output_dir+outputfile_name+"_pca_loadings_pickle_dump.txt","w")
+	dic_file = open(output_dir+output_name+"_pca_loadings_pickle_dump.txt","w")
 	pickle.dump(pca_loading_dict,dic_file)
 	dic_file.close()
 	
