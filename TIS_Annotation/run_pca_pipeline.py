@@ -29,11 +29,13 @@ def main(argv):
 def perform_pipeline(input_file,fasta_file,out_name):
 	pca_command = "python pca_analysis.py -i "+str(input_file)+" -f "+fasta_file+" -o "+ out_name
 	print pca_command
-	#pca_run = os.system(pca_command)
-	print "PCA iterations done..."		
+	pca_run = os.system(pca_command)
+	print "PCA iterations done.."		
 	score_analysis_command = "python analyze_create_new_annotation.py -i "+str(input_file)+" -o " + out_name
 	score_run = os.system(score_analysis_command)	
-	print "Analyzing PCA results done..."
+	print "Analyzing PCA results done.."
+	print "Generated output matrix with 5 best scoring potential TISs for each ORF.. " 
+	print "Generated output table with best scoring TISs.."
 	#loading_analysis_command = "python analyze_pca_loadings.py -i "+str(input_file)+" -o " + out_name
 	#loading_run = os.system(loading_analysis_command)
 	#print "Analyzing PCA loadings done..."		
