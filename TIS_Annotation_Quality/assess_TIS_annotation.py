@@ -269,14 +269,16 @@ def plot_data(combined_dict,name,number_of_orfs,coding_alt_start_freq,upstream_a
 	values = []
 	function_values = []
 	keys = sorted(combined_dict.keys())
+	at = (1-genome_gc)/2
+    gc = genome_gc/2
+    stop_probability = at*at*at + at*gc*at + at*gc*at
 	for label in keys:
 		values.append(combined_dict[label])
 		if label<0:
-			#with coding start freqs
-			#function_values.append(number_of_orfs*(coding_alt_start_freq)*(1-1/float(32))**(abs(label)/3))
-			function_values.append(number_of_orfs*(upstream_alt_start_freq)*(1-3/float(64))**(abs(label)/3))
+			#Upstream
+			function_values.append(number_of_orfs*(upstream_alt_start_freq)*(1-stop_probability)**(abs(label)/3))
 		else:
-				#function_values.append(number_of_orfs*(3/64.0))
+			#Coding
 			function_values.append(number_of_orfs*(coding_alt_start_freq))
 	ind = np.arange(N)  # the x locations for the groups
 	width = 1       # the width of the bars
