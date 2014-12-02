@@ -92,20 +92,6 @@ def read_ptt(genome):
 	print "Loading ORF annotation done..."
 	return genome_orfs,name
 	
-def read_adjusted_annotation(outputfile_name,genome_orfs):
-	file = open("final_output/"+outputfile_name+"_adjusted_annotation.txt","r")
-	lines = file.readlines()
-	adjusted_genome_orfs = {}
-	for line in lines:
-		data = line.strip().split("\t")
-		locus_tag = data[0].strip()
-		abs_position = int(float(data[3]))
-		start,stop,strand = genome_orfs[locus_tag]
-		adjusted_genome_orfs[locus_tag] = [abs_position,stop,strand]
-	return adjusted_genome_orfs
-		
-	
-	
 def get_codon_search_seqs(genome_orfs,genome_seq,name,genome_gc):
 	candidate_starts_per_orf = {}
 	initial_pca_keys = []
