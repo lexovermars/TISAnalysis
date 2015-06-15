@@ -34,7 +34,7 @@ def main(argv):
 
 
 ## Analysis parameters and variables #
-window_up = 18
+window_up = 30
 window_down = 18
 codon_search_window = 198
 output_dir = "output/"

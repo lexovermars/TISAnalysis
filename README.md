@@ -7,10 +7,11 @@ The identification of the correct translation initiation sites (TISs) constitute
 Requirements
 ============
 - Python
-- NumPy
-- SciPy
-- matplotlib
+- NumPy (python module)
+- SciPy (python module)
+- matplotlib (python module)
 - R (only for the PCA-based correction of TIS existing annotations)
+- MASS (R package; only required for the PCA-based correction of TIS existing annotations)
 
 Usage
 =====
