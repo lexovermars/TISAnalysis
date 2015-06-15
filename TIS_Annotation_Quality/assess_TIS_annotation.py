@@ -39,8 +39,6 @@ def main(argv):
 
 ## Analysis parameters ##
 out_dir = "output/"
-window_up = 18
-window_down = 18
 codon_search_window = 198
 start_codons = ["ATG", "GTG", "TTG"]
 stop_codons = ["TAA", "TAG", "TGA"]
@@ -186,18 +184,6 @@ def get_codon_search_seqs(genome_orfs,genome_seq,name,genome_gc):
 	plot_data(combined_dict,name,len(genome_orfs.keys()),coding_alt_start_freq,upstream_alt_start_freq,genome_gc)
 
 	return candidate_starts_per_orf, initial_pca_keys
-	
-def get_up_down_seqs(genome_seq,start_codon_pos,strand):
-	for gene in genome_orfs.keys():
-		if strand == "+":
-			up_seq = genome_seq[start_codon_pos-window_up:start_codon_pos]
-			down_seq = genome_seq[start_codon_pos+3:start_codon_pos+window_up+3]
-		if strand == "-":
-			up_seq = genome_seq[start_codon_pos:start_codon_pos+window_down]
-			down_seq = genome_seq[start_codon_pos-window_down-3:start_codon_pos-3]
-			up_seq = reverse_sequence(up_seq)
-			down_seq = reverse_sequence(down_seq)
-	return up_seq,down_seq
 	
 def find_candidate_starts(sequence,direction,strand,start):
 	relative_position = None
