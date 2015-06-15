@@ -23,6 +23,12 @@ TIS Annotation Quality
 --------------
 
 	python assess_TIS_annotation.py -i Example_Data/NC_000913.ptt -f Example_Data/NC_000913.fna -o "MyOutputName"
+	
+Output 
+
+- MyOutputName_distribution.png Distribution plot of genome-wide alternative TISs.
+- MyOutputName_correlation.txt Table with species name, GC-percentage, #ORFs and spearman correlation score
+
 
 TIS Annotator
 --------------
