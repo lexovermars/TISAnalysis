@@ -36,13 +36,8 @@ def perform_pipeline(input_file,fasta_file,out_name):
 	print "Analyzing PCA results done.."
 	print "Generated output matrix with 5 best scoring potential TISs for each ORF.. " 
 	print "Generated output table with best scoring TISs.."
-	#loading_analysis_command = "python analyze_pca_loadings.py -i "+str(input_file)+" -o " + out_name
-	#loading_run = os.system(loading_analysis_command)
-	#print "Analyzing PCA loadings done..."		
-	#alt_start_command = "python ../TIS_annotation_quality/assess_TIS_annotation.py -i "+str(input_file)+" -f "+fasta_file+" -o " + out_name
-	#alt_start_run = os.system(alt_start_command)
 
 
 if __name__ == "__main__":
-        input_file,fasta_file,output_name = main(sys.argv[1:])	
+	input_file,fasta_file,output_name = main(sys.argv[1:])	
 	perform_pipeline(input_file,fasta_file,output_name)
