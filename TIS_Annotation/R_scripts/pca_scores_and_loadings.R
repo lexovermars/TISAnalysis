@@ -4,16 +4,11 @@ file_name_input <- paste("output/",file_name,"_3_max_length.txt",sep="")
 
 #Do the initial PCA
 data <- read.table(file_name_input,header=TRUE)
-#Check here which columns you want to include
-#Complete
-#fit <- prcomp(data[,7:182],center=TRUE)
+
+#Check here which columns you want to include (dependent on vector length in PCA_analysis.py)
 #complete with startnt
 fit <- prcomp(data[,7:154],center=TRUE)
-#OR: Only upstream:
-#data <- data[order(data[,1]),]
-#fit <- prcomp(data[,7:78],center=TRUE)
-#OR: Only downstream
-#fit <- prcomp(data[,79:150])
+
 all_data <- cbind(as.character(data$Start_label),fit$x[,1:2])
 plot(all_data[which(all_data[,1]=="annotated"),2:3],pch='.',cex=3,col="red")
 points(all_data[which(all_data[,1]=="downstream"),2:3],pch='.',cex=3,col="blue")
