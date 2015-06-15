@@ -247,8 +247,8 @@ def plot_data(combined_dict,name,number_of_orfs,coding_alt_start_freq,upstream_a
 	function_values = []
 	keys = sorted(combined_dict.keys())
 	at = (1-genome_gc)/2
-    gc = genome_gc/2
-    stop_probability = at*at*at + at*gc*at + at*gc*at
+	gc = genome_gc/2
+	stop_probability = at*at*at + at*gc*at + at*gc*at
 	for label in keys:
 		values.append(combined_dict[label])
 		if label<0:
