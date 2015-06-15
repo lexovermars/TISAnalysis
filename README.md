@@ -26,8 +26,8 @@ TIS Annotation Quality
 	
 Output 
 
-- MyOutputName_distribution.png Distribution plot of genome-wide alternative TISs.
-- MyOutputName_correlation.txt Table with species name, GC-percentage, #ORFs and spearman correlation score
+- MyOutputName_distribution.png: Distribution plot of genome-wide alternative TISs.
+- MyOutputName_correlation.txt: Table with species name, GC-percentage, #ORFs and spearman correlation score
 
 
 TIS Annotator
