@@ -10,8 +10,9 @@ Requirements
 - NumPy (python module)
 - SciPy (python module)
 - matplotlib (python module)
-- R (only for the PCA-based correction of TIS existing annotations)
-- MASS (R package; only required for the PCA-based correction of TIS existing annotations)
+In addition, the PCa based correction existing TIS annotation requires:
+- R 
+- MASS (R package)
 
 Usage
 =====
