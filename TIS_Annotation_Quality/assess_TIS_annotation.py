@@ -1,13 +1,15 @@
-import numpy as np
 import os
-from scipy import stats
 import sys, getopt
+import numpy as np
+from scipy import stats
+plot_result = True
 try:
 	import matplotlib
 	matplotlib.use('Agg')
 	import matplotlib.pyplot as plt
 except:
-	print "Could not find matplotlib"
+	print "Could not find matplotlib; will continue without distribution plot"
+	plot_result = False
 
 def main(argv):
 	inputfile = ''
@@ -269,21 +271,22 @@ def plot_data(combined_dict,name,number_of_orfs,coding_alt_start_freq,upstream_a
 		else:
 			#Coding
 			function_values.append(number_of_orfs*(coding_alt_start_freq))
-	ind = np.arange(N)  # the x locations for the groups
-	width = 1       # the width of the bars
-	fig = plt.figure()
-	fig.set_size_inches(18.5,10.5)
-	ax = fig.add_subplot(111)
-	ax.bar(ind, values, width, color='CornflowerBlue',edgecolor = "black") #RoyalBlue?
-	ax.set_xticks(ind)
-	ax.set_xticklabels(keys,rotation='vertical')
+	if plot_result == True:
+		ind = np.arange(N)  # the x locations for the groups
+		width = 1       # the width of the bars
+		fig = plt.figure()
+		fig.set_size_inches(18.5,10.5)
+		ax = fig.add_subplot(111)
+		ax.bar(ind, values, width, color='CornflowerBlue',edgecolor = "black") #RoyalBlue?
+		ax.set_xticks(ind)
+		ax.set_xticklabels(keys,rotation='vertical')
 
-	fig.set_size_inches(18.5,10.5)
-	name = name.replace("\\","")
-	name = name.replace("/","")
-	ax.plot(function_values,color="r",linewidth=2)
-	plt.ylim([0,500])
-	ax.set_title(name)
+		fig.set_size_inches(18.5,10.5)
+		name = name.replace("\\","")
+		name = name.replace("/","")
+		ax.plot(function_values,color="r",linewidth=2)
+		plt.ylim([0,500])
+		ax.set_title(name)
 	try:
 		correlation = stats.spearmanr(values,function_values)
 		correlation_up = stats.spearmanr(values[0:65],function_values[0:65])
@@ -296,18 +299,20 @@ def plot_data(combined_dict,name,number_of_orfs,coding_alt_start_freq,upstream_a
 		output_file.close()
 		print "TIS correlation file generated.."
 	except:
+		print "Could not write output file.."
 		pass
-	try:
-		for label in ax.get_xticklabels():
-			label.set_fontsize(6)
-		if not os.path.exists(out_dir):
-			os.makedirs(out_dir)
-		fig.savefig(out_dir+name+'_distribution.png')
-		plt.clf()
-		print "TIS distribution plot generated..."
-	except:
-		print "plot for", name,"save failed..."
-		plt.clf()
+	if plot_result == True:
+		try:
+			for label in ax.get_xticklabels():
+				label.set_fontsize(6)
+			if not os.path.exists(out_dir):
+				os.makedirs(out_dir)
+			fig.savefig(out_dir+name+'_distribution.png')
+			plt.clf()
+			print "TIS distribution plot generated..."
+		except:
+			print "plot for", name,"save failed..."
+			plt.clf()
 	return None
 
 if __name__ == "__main__":
