@@ -1,10 +1,13 @@
-import matplotlib
-matplotlib.use('Agg')
 import numpy as np
-import matplotlib.pyplot as plt
 import os
 from scipy import stats
 import sys, getopt
+try:
+	import matplotlib
+	matplotlib.use('Agg')
+	import matplotlib.pyplot as plt
+except:
+	print "Could not find matplotlib"
 
 def main(argv):
 	inputfile = ''
