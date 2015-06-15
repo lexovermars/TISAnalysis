@@ -27,3 +27,9 @@ TIS Annotation Quality
 TIS Annotator
 --------------
 	 python run_pca_pipeline.py -i Example_data/NC_000913.ptt -f Example_data/NC_000913.fna -o "MyOutputName"
+
+
+Output
+- MyOutputName_5_rows_iteration_matrix.txt: Matrix with locus tag, TIS label (e.g. upstream, annotated or downstream) and PCA scores (PCA1,PCA2,PCA3; over 10 PCA iterations) for 5 top scoring TISs for each ORF. 
+- MyOutputName_adjusted_annotation.txt Matrix with locus tag, TIS label (e.g. upstream, annotated or downstream) and PCA scores (PCA1,PCA2,PCA3; over 10 PCA iterations) for best scoring TIS. 
+- MyOutputName_matrix_discarded.txt  Matrix with locus tag, TIS label (e.g. upstream, annotated or downstream) and PCA scores (PCA1,PCA2,PCA3; over 10 PCA iterations) for all TISs that did end up in the top 5 TIS table.
